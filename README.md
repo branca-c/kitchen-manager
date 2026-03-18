@@ -1,1 +1,1 @@
-Kitchen manager
+Kitchen manager - 2.0
