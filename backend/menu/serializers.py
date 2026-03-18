@@ -1,24 +1,24 @@
 from rest_framework import serializers
-from .models import Categoria, Piatto
+from .models import Category, Dish
 
-class CategoriaSerializer(serializers.ModelSerializer):
+class CategorySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Categoria
-        # L'admin inserisce solo il nome
-        fields = ['id', 'nome']
+        model = Category
+        # Admin only enters the name
+        fields = ['id', 'name']
 
-class PiattoSerializer(serializers.ModelSerializer):
+class DishSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Piatto
-        # Tutti i campi necessari per gestire il piatto
+        model = Dish
+        # All fields needed to manage the dish
         fields = [
             'id', 
-            'nome', 
-            'descrizione', 
-            'prezzo', 
-            'categoria', 
-            'ingredienti', 
-            'allergeni', 
-            'attivo',
-            'disponibile'
+            'name', 
+            'description', 
+            'price', 
+            'category', 
+            'ingredients', 
+            'has_allergens', 
+            'is_active',
+            'is_available'
         ]

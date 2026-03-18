@@ -4,112 +4,112 @@ from django.db.models.signals import pre_delete, pre_save
 from django.dispatch import receiver
 from rest_framework.exceptions import ValidationError
 
-class Categoria(models.Model):
+class Category(models.Model):
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
         editable=False
     )
-    nome = models.CharField(
+    name = models.CharField(
         max_length=100,
         unique=True,
-        help_text='Esempi: "Primi Piatti", "Secondi", "Bevande", "Dolci"'
+        help_text='Examples: "Starters", "Main Courses", "Drinks", "Desserts"'
     )
 
     class Meta:
-        db_table = "categorie"
+        db_table = "categories"
     
     def __str__(self):
-        return self.nome
+        return self.name
 
-class Piatto(models.Model):
+class Dish(models.Model):
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
         editable=False
     )
-    nome = models.CharField(
+    name = models.CharField(
         max_length=200
     )
-    descrizione = models.TextField(
+    description = models.TextField(
         blank=True, 
         null=True
     )
-    prezzo = models.DecimalField(
+    price = models.DecimalField(
         max_digits=6, 
         decimal_places=2
     )
-    categoria = models.ForeignKey(
-        Categoria,
+    category = models.ForeignKey(
+        Category,
         on_delete=models.CASCADE,
-        related_name="piatti"
+        related_name="dishes"
     )
-    ingredienti = models.TextField(
-        help_text="Lista degli ingredienti separati da virgola"
+    ingredients = models.TextField(
+        help_text="Comma-separated list of ingredients"
     )
-    allergeni = models.BooleanField(
+    has_allergens = models.BooleanField(
         default=False, 
-        help_text="Selezionare se il piatto contiene sostanze allergizzanti"
+        help_text="Check if the dish contains allergenic substances"
     )
-    attivo = models.BooleanField(
+    is_active = models.BooleanField(
         default=True, 
-        help_text="Indica se il piatto è presente nel menu corrente"
+        help_text="Indicates if the dish is currently on the menu"
     )
-    disponibile = models.BooleanField(
+    is_available = models.BooleanField(
         default=True, 
-        help_text="Se disattivato, il piatto apparirà come 'esaurito' e non sarà ordinabile"
+        help_text="If disabled, the dish will appear as 'sold out' and won't be orderable"
     )
 
     class Meta:
-        db_table = "piatti"
+        db_table = "dishes"
 
     def __str__(self):
-        return self.nome
+        return self.name
 
 
 # ==========================================
-# PATTERN OSSERVATORE (PER LO STORICO)
+# OBSERVER PATTERN (FOR HISTORY)
 # ==========================================
-# L'OsservatoreStorico monitora le modifiche allo stato dei piatti e
-# garantisce che i piatti ritirati dal menu non vengano eliminati
-# dal database, preservando la cronologia degli ordini esistenti.
+# DishObserver monitors changes to dish state and ensures that dishes
+# removed from the menu are not deleted from the database,
+# preserving the history of existing orders.
 
-class OsservatoreBase:
+class BaseObserver:
     """
-    Classe base per gestire la logica di osservazione dei modelli.
+    Base class for handling model observation logic.
     """
-    def aggiorna(self, istanza, **kwargs):
-        raise NotImplementedError("Le sottoclassi devono implementare il metodo aggiorna.")
+    def update(self, instance, **kwargs):
+        raise NotImplementedError("Subclasses must implement the update method.")
 
-class OsservatorePiatto(OsservatoreBase):
+class DishObserver(BaseObserver):
     """
-    Osservatore per applicare la logica di business definita per il Menu:
-    1. attivo=Sì AND disponibile=Sì -> Visibile e ordinabile.
-    2. attivo=Sì AND disponibile=No -> Visibile ma 'Esaurito'.
-    3. attivo=No AND disponibile=No -> Rimosso dal menu, mantenuto nel database.
+    Observer to apply defined business logic for the Menu:
+    1. is_active=True AND is_available=True -> Visible and orderable.
+    2. is_active=True AND is_available=False -> Visible but 'Sold Out'.
+    3. is_active=False AND is_available=False -> Removed from menu, kept in DB.
     """
-    def aggiorna(self, istanza, **kwargs):
-        # Se il piatto viene rimosso dal menu (attivo=False),
-        # deve necessariamente diventare non ordinabile (disponibile=False).
-        if not istanza.attivo and istanza.disponibile:
-            istanza.disponibile = False
+    def update(self, instance, **kwargs):
+        # If the dish is removed from the menu (is_active=False),
+        # it must necessarily become non-orderable (is_available=False).
+        if not instance.is_active and instance.is_available:
+            instance.is_available = False
 
-# Istanza globale dell'osservatore
-osservatore_piatto = OsservatorePiatto()
+# Global instance of the observer
+dish_observer = DishObserver()
 
-@receiver(pre_save, sender=Piatto)
-def osservatore_pre_salvataggio_piatto(sender, instance, **kwargs):
+@receiver(pre_save, sender=Dish)
+def dish_pre_save_observer(sender, instance, **kwargs):
     """
-    Intercetta il salvataggio per validare la coerenza degli stati.
+    Intercepts the save to validate state consistency.
     """
-    osservatore_piatto.aggiorna(instance)
+    dish_observer.update(instance)
 
-@receiver(pre_delete, sender=Piatto)
-def impedisci_eliminazione_fisica_piatto(sender, instance, **kwargs):
+@receiver(pre_delete, sender=Dish)
+def prevent_physical_dish_deletion(sender, instance, **kwargs):
     """
-    Blocca l'eliminazione dal database per preservare lo storico.
+    Blocks deletion from the database to preserve history.
     """
     raise ValidationError(
-        "I piatti non possono essere eliminati definitivamente per non rompere lo storico degli ordini. "
-        "Per favore, usa il campo 'Attivo' per rimuoverlo dal menu."
-    )
+        "Dishes cannot be permanently deleted to avoid breaking order history. "
+        "Please use the 'is_active' field to remove it from the menu."
+    )
