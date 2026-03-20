@@ -1,7 +1,10 @@
-from rest_framework import generics, permissions, status
-from rest_framework.views import APIView
+from rest_framework import generics, permissions, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
+
 from .models import Category, Dish, Order, Review
 from .serializers import (
     CategorySerializer,
@@ -10,12 +13,18 @@ from .serializers import (
     ReviewSerializer,
     RegisterSerializer,
     UserMeSerializer,
-    CustomTokenObtainPairSerializer
+    CustomTokenObtainPairSerializer,
 )
+from .services import AIService
+
+
+# ──────────────────────────────────────────
+# AUTH VIEWS (Anna)
+# ──────────────────────────────────────────
 
 class RegisterView(APIView):
     """
-    POST /auth/register/
+    POST /api/auth/register/
     Registrazione pubblica — crea sempre un customer.
     """
     permission_classes = [permissions.AllowAny]
@@ -33,7 +42,7 @@ class RegisterView(APIView):
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     """
-    POST /auth/login/
+    POST /api/auth/login/
     Login customer e admin — restituisce access, refresh, role, user_id.
     """
     serializer_class = CustomTokenObtainPairSerializer
@@ -41,7 +50,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 class MeView(APIView):
     """
-    GET /auth/me/
+    GET /api/auth/me/
     Restituisce i dati dell'utente autenticato. Richiede token valido.
     """
     permission_classes = [permissions.IsAuthenticated]
@@ -50,12 +59,15 @@ class MeView(APIView):
         return Response(UserMeSerializer(request.user).data)
 
 
-# --- VIEWS PER IL MENU (Pubbliche) ---
+# ──────────────────────────────────────────
+# MENU VIEWS (Marika)
+# ──────────────────────────────────────────
 
 class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [permissions.AllowAny]
+
 
 class DishListView(generics.ListAPIView):
     queryset = Dish.objects.filter(is_active=True)
@@ -63,27 +75,88 @@ class DishListView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
 
 
-# --- VIEWS PER GLI ORDINI (Protette) ---
+# ──────────────────────────────────────────
+# ORDER VIEWS (Chiara)
+# ──────────────────────────────────────────
 
 class OrderListCreateView(generics.ListCreateAPIView):
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Un cliente vede solo i PROPRI ordini, un admin vede TUTTO
         user = self.request.user
-        if user.role == 'admin':
+        if (
+            getattr(user, "role", None) == "admin"
+            or user.is_staff
+            or user.is_superuser
+        ):
             return Order.objects.all()
         return Order.objects.filter(user=user)
 
     def perform_create(self, serializer):
-        # Assegna automaticamente l'utente loggato all'ordine
         serializer.save(user=self.request.user)
 
 
-# --- VIEWS PER LE RECENSIONI ---
+# ──────────────────────────────────────────
+# REVIEW VIEWS (Isabelle)
+# ──────────────────────────────────────────
 
-class ReviewCreateView(generics.CreateAPIView):
-    queryset = Review.objects.all()
+class ReviewViewSet(viewsets.ModelViewSet):
+    """
+    Gestisce il ciclo di vita delle recensioni e l'analisi AI per l'admin.
+    """
     serializer_class = ReviewSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if (
+            getattr(user, "role", None) == "admin"
+            or user.is_staff
+            or user.is_superuser
+        ):
+            return Review.objects.all()
+        return Review.objects.filter(order__user=user)
+
+    def perform_create(self, serializer):
+        order = serializer.validated_data["order"]
+
+        if order.user != self.request.user:
+            raise PermissionDenied("Non puoi recensire un ordine non tuo.")
+
+        if order.status != "delivered":
+            raise PermissionDenied(
+                "Puoi recensire l'ordine solo dopo la consegna (stato: delivered)."
+            )
+
+        serializer.save()
+
+    @action(detail=False, methods=["get"], url_path="ai-summary")
+    def ai_summary(self, request):
+        if not (
+            getattr(request.user, "role", None) == "admin"
+            or request.user.is_staff
+            or request.user.is_superuser
+        ):
+            return Response(
+                {"detail": "Accesso negato. Funzionalità riservata all'amministratore."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        reviews = Review.objects.all()
+        if reviews.count() < 3:
+            return Response(
+                {"detail": "Dati insufficienti: servono almeno 3 recensioni per avviare l'IA."},
+                status=status.HTTP_200_OK,
+            )
+
+        analysis = AIService.analyze_reviews(reviews)
+
+        return Response(
+            {
+                "status": "Analisi Reale Completata",
+                "provider": "Gemini 2.5 Flash",
+                "results": analysis,
+            },
+            status=status.HTTP_200_OK,
+        )
