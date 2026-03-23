@@ -1,0 +1,17 @@
+<svg width="800" height="560" viewBox="0 0 800 560" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="560" rx="32" fill="#F7F4EE"/>
+  <circle cx="400" cy="280" r="190" fill="#D8A15D"/>
+  <circle cx="400" cy="280" r="172" fill="#F2C07A"/>
+  <circle cx="400" cy="280" r="154" fill="#D84F4F"/>
+  <circle cx="400" cy="280" r="128" fill="#F5E7DB"/>
+  <circle cx="320" cy="228" r="30" fill="#C44141"/>
+  <circle cx="470" cy="220" r="26" fill="#C44141"/>
+  <circle cx="506" cy="318" r="32" fill="#C44141"/>
+  <circle cx="355" cy="344" r="28" fill="#C44141"/>
+  <circle cx="280" cy="292" r="24" fill="#C44141"/>
+  <circle cx="430" cy="168" r="25" fill="#C44141"/>
+  <circle cx="246" cy="198" r="20" fill="#C44141"/>
+  <path d="M454 358C474 329 514 327 535 350C504 365 474 371 454 358Z" fill="#E85D5D"/>
+  <path d="M256 182C279 156 313 156 334 180C304 191 278 193 256 182Z" fill="#E85D5D"/>
+  <text x="56" y="502" fill="#295C4F" font-family="Georgia, serif" font-size="46" font-weight="700">Diavola</text>
+</svg>

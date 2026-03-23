@@ -1,0 +1,12 @@
+<svg width="800" height="560" viewBox="0 0 800 560" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="560" rx="32" fill="#EFE9E1"/>
+  <circle cx="400" cy="280" r="190" fill="#CBB9A4"/>
+  <circle cx="400" cy="280" r="172" fill="#DDD0C0"/>
+  <circle cx="400" cy="280" r="154" fill="#B98D85"/>
+  <circle cx="400" cy="280" r="128" fill="#EEE6DD"/>
+  <path d="M245 175L555 385" stroke="#8A6B65" stroke-width="28" stroke-linecap="round"/>
+  <circle cx="320" cy="228" r="30" fill="#A2736D"/>
+  <circle cx="470" cy="220" r="26" fill="#A2736D"/>
+  <circle cx="506" cy="318" r="32" fill="#A2736D"/>
+  <text x="56" y="502" fill="#6A6761" font-family="Georgia, serif" font-size="46" font-weight="700">Pizza Storica 2025</text>
+</svg>

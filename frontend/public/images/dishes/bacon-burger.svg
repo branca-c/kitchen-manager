@@ -1,0 +1,15 @@
+<svg width="800" height="560" viewBox="0 0 800 560" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="560" rx="32" fill="#F7F4EE"/>
+  <ellipse cx="400" cy="248" rx="176" ry="86" fill="#E3A85B"/>
+  <path d="M224 252C224 204 303 166 400 166C497 166 576 204 576 252V270H224V252Z" fill="#E4B66E"/>
+  <circle cx="340" cy="205" r="7" fill="#F9E6B0"/>
+  <circle cx="392" cy="196" r="7" fill="#F9E6B0"/>
+  <circle cx="444" cy="209" r="7" fill="#F9E6B0"/>
+  <circle cx="485" cy="229" r="7" fill="#F9E6B0"/>
+  <path d="M252 292H548V324C548 340 535 353 519 353H281C265 353 252 340 252 324V292Z" fill="#5B3828"/>
+  <rect x="238" y="276" width="324" height="20" rx="10" fill="#F1CF4F"/>
+  <path d="M250 264C276 243 308 247 332 264C351 278 383 282 408 271C433 260 468 261 492 278L548 264V298H250V264Z" fill="#4F9E58"/>
+  <path d="M248 315C272 300 304 301 329 316C352 330 387 333 413 322C439 311 473 312 499 328L548 315V344H248V315Z" fill="#B84A4A"/>
+  <path d="M224 352H576V374C576 421 497 458 400 458C303 458 224 421 224 374V352Z" fill="#D9964D"/>
+  <text x="56" y="502" fill="#295C4F" font-family="Georgia, serif" font-size="46" font-weight="700">Bacon Burger</text>
+</svg>
