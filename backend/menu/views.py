@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from .models import Dish, Category
@@ -58,6 +59,7 @@ def category_delete(request, id):
 # ==========================================
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def menu_view(request):
     """
     Returns the list of active dishes in the menu.
@@ -66,22 +68,17 @@ def menu_view(request):
     - ?is_available=true/false
     - ?has_allergens=true/false
     """
-    # Start with all active dishes
     dishes = Dish.objects.filter(is_active=True)
 
-    # Category Filter
     category_id = request.query_params.get('category')
     if category_id:
         dishes = dishes.filter(category__id=category_id)
 
-    # Availability Filter
     is_available = request.query_params.get('is_available')
     if is_available is not None:
-        # Converts string 'true' / 'false' to boolean
         is_available_bool = is_available.lower() == 'true'
         dishes = dishes.filter(is_available=is_available_bool)
 
-    # Allergens Filter
     has_allergens = request.query_params.get('has_allergens')
     if has_allergens is not None:
         has_allergens_bool = has_allergens.lower() == 'true'
@@ -116,10 +113,9 @@ def dish_update(request, id):
     Updates the data of an existing dish.
     """
     dish = get_object_or_404(Dish, pk=id)
-    # partial=True allows omitting fields in PATCH requests
     partial = request.method == 'PATCH'
     serializer = DishSerializer(dish, data=request.data, partial=partial)
-    
+
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data)
@@ -135,5 +131,6 @@ def dish_delete(request, id):
     dish.is_available = False
     dish.save()
     return Response({"message": "Dish successfully deactivated."}, status=204)
+
 
 
