@@ -1,31 +1,31 @@
 from django.urls import path
 from .views import (
-    lista_categorie,
-    aggiungi_categoria,
-    modifica_categoria,
-    elimina_categoria,
-    visualizza_menu,
-    aggiungi_piatto,
-    dettaglio_piatto,
-    modifica_piatto,
-    elimina_piatto
+    category_list,
+    category_create,
+    category_update,
+    category_delete,
+    menu_view,
+    dish_create,
+    dish_detail,
+    dish_update,
+    dish_delete
 )
 
 urlpatterns = [
     # ==========================================
-    # Categorie
+    # Categories
     # ==========================================
-    path('categorie/', lista_categorie, name='lista_categorie'),
-    path('categorie/aggiungi/', aggiungi_categoria, name='aggiungi_categoria'),
-    path('categorie/<uuid:id>/modifica/', modifica_categoria, name='modifica_categoria'),
-    path('categorie/<uuid:id>/elimina/', elimina_categoria, name='elimina_categoria'),
+    path('categories/', category_list, name='category-list'),
+    path('categories/add/', category_create, name='category-create'),
+    path('categories/<uuid:id>/edit/', category_update, name='category-update'),
+    path('categories/<uuid:id>/delete/', category_delete, name='category-delete'),
 
     # ==========================================
-    # Piatti
+    # Dishes
     # ==========================================
-    path('visualizza/', visualizza_menu, name='visualizza_menu'),
-    path('piatti/aggiungi/', aggiungi_piatto, name='aggiungi_piatto'),
-    path('piatti/<uuid:id>/', dettaglio_piatto, name='dettaglio_piatto'),
-    path('piatti/<uuid:id>/modifica/', modifica_piatto, name='modifica_piatto'),
-    path('piatti/<uuid:id>/elimina/', elimina_piatto, name='elimina_piatto'),
+    path('view/', menu_view, name='menu-view'),
+    path('dishes/add/', dish_create, name='dish-create'),
+    path('dishes/<uuid:id>/', dish_detail, name='dish-detail'),
+    path('dishes/<uuid:id>/edit/', dish_update, name='dish-update'),
+    path('dishes/<uuid:id>/delete/', dish_delete, name='dish-delete'),
 ]

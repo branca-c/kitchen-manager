@@ -2,123 +2,123 @@ from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .models import Piatto, Categoria
-from .serializers import PiattoSerializer, CategoriaSerializer
+from .models import Dish, Category
+from .serializers import DishSerializer, CategorySerializer
 
 # ==========================================
-# GESTIONE CATEGORIE
+# CATEGORY MANAGEMENT
 # ==========================================
 
 @api_view(['GET'])
-def lista_categorie(request):
+def category_list(request):
     """
-    Restituisce tutte le categorie inserite.
+    Returns all categories.
     """
-    categorie = Categoria.objects.all()
-    serializer = CategoriaSerializer(categorie, many=True)
+    categories = Category.objects.all()
+    serializer = CategorySerializer(categories, many=True)
     return Response(serializer.data)
 
 @api_view(['POST'])
-def aggiungi_categoria(request):
+def category_create(request):
     """
-    Aggiunge una nuova categoria.
+    Adds a new category.
     """
-    serializer = CategoriaSerializer(data=request.data)
+    serializer = CategorySerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=201)
     return Response(serializer.errors, status=400)
 
 @api_view(['PUT', 'PATCH'])
-def modifica_categoria(request, id):
+def category_update(request, id):
     """
-    Rinomina o modifica una categoria esistente.
+    Renames or modifies an existing category.
     """
-    categoria = get_object_or_404(Categoria, pk=id)
+    category = get_object_or_404(Category, pk=id)
     partial = request.method == 'PATCH'
-    serializer = CategoriaSerializer(categoria, data=request.data, partial=partial)
+    serializer = CategorySerializer(category, data=request.data, partial=partial)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data)
     return Response(serializer.errors, status=400)
 
 @api_view(['DELETE'])
-def elimina_categoria(request, id):
+def category_delete(request, id):
     """
-    Cancella definitivamente una categoria dal DB.
-    ATTENZIONE: Verranno eliminati anche tutti i piatti ad essa collegati (on_delete=CASCADE).
+    Permanently deletes a category from the DB.
+    WARNING: All connected dishes will also be deleted (on_delete=CASCADE).
     """
-    categoria = get_object_or_404(Categoria, pk=id)
-    categoria.delete()
-    return Response({"message": "Categoria eliminata con successo."}, status=204)
+    category = get_object_or_404(Category, pk=id)
+    category.delete()
+    return Response({"message": "Category successfully deleted."}, status=204)
 
 
 # ==========================================
-# GESTIONE PIATTI
+# DISH MANAGEMENT
 # ==========================================
 
 @api_view(['GET'])
-def visualizza_menu(request):
+def menu_view(request):
     """
-    Restituisce la lista dei piatti attivi nel menu.
-    Supporta i filtri via Query Params:
-    - ?categoria=<id>
-    - ?disponibile=true/false
-    - ?allergeni=true/false
+    Returns the list of active dishes in the menu.
+    Supports filters via Query Params:
+    - ?category=<id>
+    - ?is_available=true/false
+    - ?has_allergens=true/false
     """
-    # Partiamo da tutti i piatti attivi
-    piatti = Piatto.objects.filter(attivo=True)
+    # Start with all active dishes
+    dishes = Dish.objects.filter(is_active=True)
 
-    # Filtro Categoria
-    categoria_id = request.query_params.get('categoria')
-    if categoria_id:
-        piatti = piatti.filter(categoria__id=categoria_id)
+    # Category Filter
+    category_id = request.query_params.get('category')
+    if category_id:
+        dishes = dishes.filter(category__id=category_id)
 
-    # Filtro Disponibilità
-    disponibile = request.query_params.get('disponibile')
-    if disponibile is not None:
+    # Availability Filter
+    is_available = request.query_params.get('is_available')
+    if is_available is not None:
         # Converts string 'true' / 'false' to boolean
-        disponibile_bool = disponibile.lower() == 'true'
-        piatti = piatti.filter(disponibile=disponibile_bool)
+        is_available_bool = is_available.lower() == 'true'
+        dishes = dishes.filter(is_available=is_available_bool)
 
-    # Filtro Allergeni
-    allergeni = request.query_params.get('allergeni')
-    if allergeni is not None:
-        allergeni_bool = allergeni.lower() == 'true'
-        piatti = piatti.filter(allergeni=allergeni_bool)
+    # Allergens Filter
+    has_allergens = request.query_params.get('has_allergens')
+    if has_allergens is not None:
+        has_allergens_bool = has_allergens.lower() == 'true'
+        dishes = dishes.filter(has_allergens=has_allergens_bool)
 
-    serializer = PiattoSerializer(piatti, many=True)
+    serializer = DishSerializer(dishes, many=True)
     return Response(serializer.data)
 
 @api_view(['POST'])
-def aggiungi_piatto(request):
+def dish_create(request):
     """
-    Aggiunge un nuovo piatto al database.
+    Adds a new dish to the database.
     """
-    serializer = PiattoSerializer(data=request.data)
+    serializer = DishSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=201)
     return Response(serializer.errors, status=400)
 
 @api_view(['GET'])
-def dettaglio_piatto(request, id):
+def dish_detail(request, id):
     """
-    Restituisce i dettagli di un singolo piatto.
+    Returns the details of a single dish.
     """
-    piatto = get_object_or_404(Piatto, pk=id)
-    serializer = PiattoSerializer(piatto)
+    dish = get_object_or_404(Dish, pk=id)
+    serializer = DishSerializer(dish)
     return Response(serializer.data)
 
 @api_view(['PUT', 'PATCH'])
-def modifica_piatto(request, id):
+def dish_update(request, id):
     """
-    Aggiorna i dati di un piatto esistente.
+    Updates the data of an existing dish.
     """
-    piatto = get_object_or_404(Piatto, pk=id)
+    dish = get_object_or_404(Dish, pk=id)
     # partial=True allows omitting fields in PATCH requests
     partial = request.method == 'PATCH'
-    serializer = PiattoSerializer(piatto, data=request.data, partial=partial)
+    serializer = DishSerializer(dish, data=request.data, partial=partial)
     
     if serializer.is_valid():
         serializer.save()
@@ -126,14 +126,14 @@ def modifica_piatto(request, id):
     return Response(serializer.errors, status=400)
 
 @api_view(['DELETE'])
-def elimina_piatto(request, id):
+def dish_delete(request, id):
     """
-    Esegue un Soft Delete: imposta il piatto come non attivo invece di rimuoverlo dal DB.
+    Performs a Soft Delete: sets the dish as inactive instead of removing it from the DB.
     """
-    piatto = get_object_or_404(Piatto, pk=id)
-    piatto.attivo = False
-    piatto.disponibile = False
-    piatto.save()
-    return Response({"message": "Piatto disattivato con successo."}, status=204)
+    dish = get_object_or_404(Dish, pk=id)
+    dish.is_active = False
+    dish.is_available = False
+    dish.save()
+    return Response({"message": "Dish successfully deactivated."}, status=204)
 
 
