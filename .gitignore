@@ -5,6 +5,7 @@ __pycache__/
 # Virtual environments
 venv/
 backend/venv/
+.venv
 
 # Django
 db.sqlite3
@@ -22,3 +23,5 @@ staticfiles/
 # OS files
 .DS_Store
 Thumbs.db
+
+../.idea/
