@@ -505,10 +505,22 @@ File di esempio:
 
 ## 12. Configurazione AI
 
-Per la parte AI serve una variabile d'ambiente:
+Per la parte AI serve una variabile d'ambiente personale configurata in locale nel file `backend/.env`.
+
+File di esempio:
+
+- [backend/.env.example](/Users/elisabettafino/Desktop/kitchen-manager/backend/.env.example)
+
+Setup rapido:
 
 ```bash
-GEMINI_API_KEY=...
+cp backend/.env.example backend/.env
+```
+
+Poi inserire:
+
+```bash
+GEMINI_API_KEY=tua_chiave_qui
 ```
 
 Il backend legge la chiave tramite:
@@ -516,12 +528,16 @@ Il backend legge la chiave tramite:
 - `settings.GEMINI_API_KEY`
 - oppure variabile ambiente / `.env`
 
+Per motivi di sicurezza e per evitare di consumare la quota gratuita condivisa, ogni sviluppatore deve usare la propria chiave Gemini locale.
+
 Condizioni minime per testare davvero l'AI:
 
 - backend attivo
 - `GEMINI_API_KEY` valida
 - almeno 3 recensioni
 - recensioni con commenti testuali significativi
+
+Dopo il riavvio del backend, l'endpoint `GET /api/reviews/ai-summary/` sara utilizzabile.
 
 Se la chiave manca, la funzionalità AI non blocca il resto dell'app, ma restituisce errore controllato.
 
