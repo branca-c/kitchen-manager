@@ -1,0 +1,16 @@
+<svg width="800" height="560" viewBox="0 0 800 560" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="560" rx="32" fill="#F7F4EE"/>
+  <circle cx="400" cy="280" r="190" fill="#D8A15D"/>
+  <circle cx="400" cy="280" r="172" fill="#F2C07A"/>
+  <circle cx="400" cy="280" r="154" fill="#D84F4F"/>
+  <circle cx="400" cy="280" r="128" fill="#F2E4D7"/>
+  <circle cx="320" cy="228" r="30" fill="#FFF8EE"/>
+  <circle cx="470" cy="220" r="26" fill="#FFF8EE"/>
+  <circle cx="506" cy="318" r="32" fill="#FFF8EE"/>
+  <circle cx="355" cy="344" r="28" fill="#FFF8EE"/>
+  <circle cx="280" cy="292" r="24" fill="#FFF8EE"/>
+  <path d="M363 169C384 150 416 150 437 169C416 184 384 184 363 169Z" fill="#2F7A55"/>
+  <path d="M455 356C476 337 508 337 529 356C508 371 476 371 455 356Z" fill="#2F7A55"/>
+  <path d="M237 239C258 220 290 220 311 239C290 254 258 254 237 239Z" fill="#2F7A55"/>
+  <text x="56" y="502" fill="#295C4F" font-family="Georgia, serif" font-size="46" font-weight="700">Margherita</text>
+</svg>
