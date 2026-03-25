@@ -19,6 +19,9 @@ staticfiles/
 # VS Code
 .vscode/
 
+# Frontend cache
+frontend/.vite/
+
 # OS files
 .DS_Store
 Thumbs.db
