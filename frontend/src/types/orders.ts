@@ -31,6 +31,13 @@ export type CreateOrderInput = {
   }>;
 };
 
+export type OrderFilters = {
+  status?: OrderStatus;
+  customer?: string;
+  dateFrom?: string;
+  dateTo?: string;
+};
+
 export type CartItem = {
   dishId: number;
   dishName: string;

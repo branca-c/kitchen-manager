@@ -409,6 +409,34 @@ button {
   margin-bottom: 24px;
 }
 
+.admin-order-filters {
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.admin-order-filters__form {
+  display: grid;
+  gap: 16px;
+}
+
+.admin-order-filters__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.admin-order-filters__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.admin-order-filters__summary {
+  margin: 0;
+}
+
 .chip {
   min-height: 40px;
   padding: 0 16px;
@@ -882,6 +910,7 @@ button {
   .hero,
   .menu-grid,
   .admin-menu-layout,
+  .admin-order-filters__grid,
   .feature-grid,
   .dish-grid,
   .ai-grid {
