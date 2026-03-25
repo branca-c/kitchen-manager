@@ -1,6 +1,6 @@
 # Kitchen Manager
 
-Questo documento raccoglie i passaggi minimi per configurare l'ambiente locale del progetto, sia lato backend sia lato frontend.
+Questo documento raccoglie i passaggi minimi per configurare l'ambiente locale del progetto, sia lato backend sia lato frontend.     
 
 ## Setup iniziale del progetto
 
