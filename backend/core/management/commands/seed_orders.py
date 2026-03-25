@@ -23,16 +23,10 @@ class Command(BaseCommand):
                 "last_name": "Rossi",
             },
             {
-                "username": "giulis.bianchi",
+                "username": "giulia.bianchi",
                 "email": "giulia.bianchi@kitchenmanager.local",
                 "first_name": "Giulia",
                 "last_name": "Bianchi",
-            },
-            {
-                "username": "luca.esposito",
-                "email": "luca.esposito@kitchenmanager.local",
-                "first_name": "Luca",
-                "last_name": "Esposito",
             },
         ]
 
@@ -70,12 +64,6 @@ class Command(BaseCommand):
                 "notes": None,
                 "items": [(margherita, 1), (diavola, 1), (coca_cola, 2)],
                 "review": f"Le pizze erano perfette e ben cotte. Purtroppo, {review_text}",
-            },
-            {
-                "user": customers[2],
-                "notes": "Margherita senza basilico",
-                "items": [(diavola, 1), (margherita, 1), (coca_cola, 2)],
-                "review": f"Nel complesso un pasto soddisfacente, però {review_text}",
             },
         ]
 
