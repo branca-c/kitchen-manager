@@ -103,6 +103,20 @@ export function AdminReviewsPage() {
       title="Recensioni"
       subtitle="Questa pagina raccoglie tutte le recensioni lato admin e permette di avviare il summary AI sui feedback dei clienti."
     >
+      {isLoadingAi ? (
+        <div className="ai-processing-overlay" role="dialog" aria-modal="true" aria-labelledby="ai-processing-title">
+          <div className="surface ai-processing-modal">
+            <span className="ai-processing-spinner" aria-hidden="true" />
+            <p className="eyebrow">Analisi AI in corso</p>
+            <h2 id="ai-processing-title">Gemini sta elaborando gli insight</h2>
+            <p>
+              Attendi qualche secondo. Stiamo analizzando le recensioni e la pagina tornera
+              disponibile appena il risultato sara pronto.
+            </p>
+          </div>
+        </div>
+      ) : null}
+
       {notice ? (
         <section className={`status-banner status-banner--${notice.tone}`}>
           {notice.text}

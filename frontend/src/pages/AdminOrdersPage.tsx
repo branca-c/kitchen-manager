@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { fetchOrders, updateOrderStatus } from '../api/orders';
 import { fetchReviews } from '../api/reviews';
 import { PageLayout } from '../components/layout/PageLayout';
-import type { Order } from '../types/orders';
+import type { Order, OrderFilters, OrderStatus } from '../types/orders';
 import type { Review } from '../types/reviews';
 import { getApiErrorMessage } from '../utils/api';
 import { formatCurrency, formatDateTime } from '../utils/format';
@@ -17,9 +17,52 @@ type Notice = {
   text: string;
 };
 
+type OrderFilterForm = {
+  status: '' | OrderStatus;
+  customer: string;
+  dateFrom: string;
+  dateTo: string;
+};
+
+const emptyOrderFilterForm: OrderFilterForm = {
+  status: '',
+  customer: '',
+  dateFrom: '',
+  dateTo: '',
+};
+
+function buildOrderFilters(form: OrderFilterForm): OrderFilters {
+  const filters: OrderFilters = {};
+
+  if (form.status) {
+    filters.status = form.status;
+  }
+
+  const customer = form.customer.trim();
+  if (customer) {
+    filters.customer = customer;
+  }
+
+  if (form.dateFrom) {
+    filters.dateFrom = form.dateFrom;
+  }
+
+  if (form.dateTo) {
+    filters.dateTo = form.dateTo;
+  }
+
+  return filters;
+}
+
+function hasActiveOrderFilters(filters: OrderFilters) {
+  return Boolean(filters.status || filters.customer || filters.dateFrom || filters.dateTo);
+}
+
 export function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [filterForm, setFilterForm] = useState<OrderFilterForm>(emptyOrderFilterForm);
+  const [appliedFilters, setAppliedFilters] = useState<OrderFilters>({});
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
   const [updatingOrderId, setUpdatingOrderId] = useState<number | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -30,7 +73,7 @@ export function AdminOrdersPage() {
     async function loadOrdersAndReviews() {
       try {
         const [ordersData, reviewsData] = await Promise.all([
-          fetchOrders(),
+          fetchOrders(appliedFilters),
           fetchReviews(),
         ]);
 
@@ -59,17 +102,55 @@ export function AdminOrdersPage() {
       }
     }
 
+    setIsLoadingOrders(true);
     void loadOrdersAndReviews();
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [appliedFilters]);
 
   const reviewsByOrderId = useMemo(
     () => new Map(reviews.map((review) => [review.orderId, review])),
     [reviews],
   );
+
+  const hasAppliedFilters = hasActiveOrderFilters(appliedFilters);
+
+  function handleFilterChange(
+    field: keyof OrderFilterForm,
+    value: OrderFilterForm[keyof OrderFilterForm],
+  ) {
+    setFilterForm((currentForm) => ({
+      ...currentForm,
+      [field]: value,
+    }));
+  }
+
+  function handleApplyFilters(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (
+      filterForm.dateFrom &&
+      filterForm.dateTo &&
+      filterForm.dateFrom > filterForm.dateTo
+    ) {
+      setNotice({
+        tone: 'info',
+        text: 'La data finale deve essere successiva o uguale alla data iniziale.',
+      });
+      return;
+    }
+
+    setNotice(null);
+    setAppliedFilters(buildOrderFilters(filterForm));
+  }
+
+  function handleResetFilters() {
+    setFilterForm(emptyOrderFilterForm);
+    setNotice(null);
+    setAppliedFilters({});
+  }
 
   async function handleAdvanceOrderStatus(order: Order) {
     const nextStatus = getNextOrderStatus(order.status);
@@ -83,12 +164,13 @@ export function AdminOrdersPage() {
 
     try {
       const updatedOrder = await updateOrderStatus(order.id, nextStatus);
+      const [ordersData, reviewsData] = await Promise.all([
+        fetchOrders(appliedFilters),
+        fetchReviews(),
+      ]);
 
-      setOrders((currentOrders) =>
-        currentOrders.map((currentOrder) =>
-          currentOrder.id === updatedOrder.id ? updatedOrder : currentOrder,
-        ),
-      );
+      setOrders(ordersData);
+      setReviews(reviewsData);
       setNotice({
         tone: 'success',
         text: `Ordine #${order.id} aggiornato a "${getOrderStatusLabel(updatedOrder.status)}".`,
@@ -111,6 +193,79 @@ export function AdminOrdersPage() {
       title="Gestione ordini"
       subtitle="Qui l'admin vede tutti gli ordini e può aggiornarne lo stato. Se un ordine consegnato ha una recensione, viene mostrata direttamente nella card."
     >
+      <section className="surface admin-order-filters">
+        <form className="admin-order-filters__form" onSubmit={handleApplyFilters}>
+          <div className="admin-order-filters__grid">
+            <label className="field">
+              <span>Stato</span>
+              <select
+                className="input"
+                value={filterForm.status}
+                onChange={(event) =>
+                  handleFilterChange('status', event.target.value as '' | OrderStatus)
+                }
+              >
+                <option value="">Tutti</option>
+                <option value="received">Ricevuto</option>
+                <option value="preparing">In preparazione</option>
+                <option value="ready">Pronto</option>
+                <option value="delivered">Consegnato</option>
+              </select>
+            </label>
+
+            <label className="field">
+              <span>Cliente</span>
+              <input
+                className="input"
+                value={filterForm.customer}
+                onChange={(event) => handleFilterChange('customer', event.target.value)}
+                placeholder="Es. mario"
+              />
+            </label>
+
+            <label className="field">
+              <span>Data da</span>
+              <input
+                className="input"
+                type="date"
+                value={filterForm.dateFrom}
+                onChange={(event) => handleFilterChange('dateFrom', event.target.value)}
+              />
+            </label>
+
+            <label className="field">
+              <span>Data a</span>
+              <input
+                className="input"
+                type="date"
+                value={filterForm.dateTo}
+                onChange={(event) => handleFilterChange('dateTo', event.target.value)}
+              />
+            </label>
+          </div>
+
+          <div className="admin-order-filters__actions">
+            <button type="submit" className="button button--primary" disabled={isLoadingOrders}>
+              Applica filtri
+            </button>
+            <button
+              type="button"
+              className="button button--secondary"
+              onClick={handleResetFilters}
+              disabled={isLoadingOrders && !hasAppliedFilters}
+            >
+              Reset
+            </button>
+          </div>
+        </form>
+
+        <p className="muted-text admin-order-filters__summary">
+          {hasAppliedFilters
+            ? `${orders.length} ordini trovati con i filtri attivi.`
+            : `${orders.length} ordini totali disponibili.`}
+        </p>
+      </section>
+
       {notice ? (
         <section className={`status-banner status-banner--${notice.tone}`}>
           {notice.text}
@@ -120,12 +275,20 @@ export function AdminOrdersPage() {
       {isLoadingOrders ? (
         <section className="surface empty-state">
           <h2>Caricamento ordini</h2>
-          <p>Sto recuperando gli ordini per l&apos;area cucina.</p>
+          <p>
+            {hasAppliedFilters
+              ? 'Sto aggiornando gli ordini con i filtri selezionati.'
+              : 'Sto recuperando gli ordini per l\'area cucina.'}
+          </p>
         </section>
       ) : orders.length === 0 ? (
         <section className="surface empty-state">
-          <h2>Nessun ordine presente</h2>
-          <p>Quando verranno creati ordini lato cliente, appariranno qui.</p>
+          <h2>{hasAppliedFilters ? 'Nessun risultato' : 'Nessun ordine presente'}</h2>
+          <p>
+            {hasAppliedFilters
+              ? 'Nessun ordine corrisponde ai filtri selezionati. Prova a modificarli o a resettarli.'
+              : 'Quando verranno creati ordini lato cliente, appariranno qui.'}
+          </p>
         </section>
       ) : (
         <section className="stack">

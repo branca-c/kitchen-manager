@@ -1,5 +1,11 @@
 import { apiClient } from './client';
-import type { CreateOrderInput, Order, OrderItem, OrderStatus } from '../types/orders';
+import type {
+  CreateOrderInput,
+  Order,
+  OrderFilters,
+  OrderItem,
+  OrderStatus,
+} from '../types/orders';
 
 type OrderItemApiResponse = {
   id: number;
@@ -45,8 +51,28 @@ function mapOrder(order: OrderApiResponse): Order {
   };
 }
 
-export async function fetchOrders() {
-  const response = await apiClient.get<OrderApiResponse[]>('orders/');
+export async function fetchOrders(filters?: OrderFilters) {
+  const params: Record<string, string> = {};
+
+  if (filters?.status) {
+    params.status = filters.status;
+  }
+
+  if (filters?.customer) {
+    params.customer = filters.customer;
+  }
+
+  if (filters?.dateFrom) {
+    params.date_from = filters.dateFrom;
+  }
+
+  if (filters?.dateTo) {
+    params.date_to = filters.dateTo;
+  }
+
+  const response = await apiClient.get<OrderApiResponse[]>('orders/', {
+    params,
+  });
   return response.data.map(mapOrder);
 }
 

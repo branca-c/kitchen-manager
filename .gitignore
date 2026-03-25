@@ -19,9 +19,13 @@ staticfiles/
 # VS Code
 .vscode/
 
-# IntelliJ / JetBrains
-.idea/
+# Frontend cache
+frontend/.vite/
 
 # OS files
 .DS_Store
 Thumbs.db
+
+# AI and IDEA folders
+.ai
+.idea
