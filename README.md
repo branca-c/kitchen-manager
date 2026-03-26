@@ -206,57 +206,81 @@ Credenziali admin di test:
 - username: `admin`
 - password: `admin123`
 
-## AWS Architecture
+## Architettura AWS proposta
 
 La struttura AWS proposta e concettuale e serve a mostrare come il progetto potrebbe essere organizzato in produzione, senza effettuare il deploy reale.
 
-### Architettura proposta
+## Architettura AWS proposta
 
-| Servizio AWS | Ruolo nell'architettura |
-| --- | --- |
-| `Amazon Route 53` | Instrada il dominio verso frontend e API. |
-| `Amazon CloudFront` | Pubblica il frontend in HTTPS e distribuisce i contenuti statici. |
-| `Amazon S3` | Ospita la build statica React. |
-| `Application Load Balancer` | Riceve il traffico API e lo distribuisce ai servizi backend. |
-| `Amazon ECS Fargate` | Esegue il backend Django DRF in container senza gestire server EC2. |
-| `Amazon RDS PostgreSQL` | Sostituisce SQLite in uno scenario di produzione. |
-| `AWS Secrets Manager` | Conserva secret key, credenziali database e API key fuori dal codice. |
-| `Amazon CloudWatch` | Raccoglie log, metriche e allarmi. |
-| `External AI Provider` | Gestisce l'integrazione con Google Gemini API. |
+L'architettura AWS rappresenta una possibile evoluzione cloud del progetto in un contesto di produzione.  
+Al momento *non è stato effettuato un deploy reale*: si tratta di una proposta architetturale pensata per mostrare come l'applicazione potrebbe essere organizzata in modo più sicuro, scalabile e coerente con uno scenario reale.
 
-### Strategia di sicurezza
+### Flusso principale
 
-| Aspetto | Sintesi |
-| --- | --- |
-| `Secrets Manager` | Secret key, credenziali database e API key verrebbero mantenute fuori dal codice. |
-| `IAM roles e IAM policies` | Ogni componente riceverebbe solo i permessi minimi necessari. |
-| `Security Groups` | Il load balancer sarebbe esposto verso l'esterno, mentre backend e database resterebbero accessibili solo ai componenti autorizzati. |
-| Configurazione applicativa | In produzione andrebbero disattivati i parametri di sviluppo e configurati correttamente host consentiti, HTTPS e CORS. |
+Il traffico in ingresso seguirebbe questo percorso:
 
-### Scalabilita e alta disponibilita
+Browser utente -> Route 53 -> AWS WAF -> Application Load Balancer -> ECS Fargate -> RDS PostgreSQL
 
-| Aspetto | Sintesi |
-| --- | --- |
-| Frontend | `S3 + CloudFront` permette di servire contenuti statici in modo facilmente scalabile. |
-| Backend | `ECS Fargate` puo eseguire piu task distribuiti su Availability Zone diverse. |
-| Load balancing | `Application Load Balancer` distribuisce il traffico solo verso task sani. |
-| Crescita e guasti | In caso di aumento del carico si possono aumentare i task; in caso di guasto di una zona, l'altra puo continuare a servire l'applicazione. |
-| Database | `RDS PostgreSQL` rende il livello dati piu adatto a un contesto di produzione rispetto a SQLite. |
+In particolare:
 
-### Stima indicativa dei costi
+| Componente | Descrizione |
+|------|-----------|
+| *Route 53* | gestirebbe il DNS dell'applicazione |
+| *AWS WAF* | filtrerebbe il traffico in ingresso prima che raggiunga l'applicazione |
+| *Application Load Balancer* | sarebbe l'unico componente esposto pubblicamente |
+| *ECS Fargate* | eseguirebbe il backend in *private subnets, distribuite su **2 Availability Zone* |
+| *RDS PostgreSQL Multi-AZ* | gestirebbe il database in modo più affidabile, con istanza primaria e standby |
 
-| Voce principale | Sintesi |
-| --- | --- |
-| `Amazon ECS Fargate` | Costo basato su CPU, memoria e storage utilizzati. |
-| `Application Load Balancer` | Costo basato sul tempo di utilizzo e sul traffico gestito. |
-| `Amazon RDS PostgreSQL` | Costo legato a istanza e storage scelti. |
-| `Amazon S3 / Amazon CloudFront` | Costo contenuto per hosting e distribuzione del frontend statico. |
-| `AWS Secrets Manager` | Costo dipendente dal numero di secret e dalle chiamate API. |
+### Sicurezza
 
-Ordine di grandezza stimato:
+L'architettura è pensata per privilegiare la separazione dei ruoli e la protezione delle componenti interne.
 
-- versione essenziale: circa `50-90 USD` al mese
-- versione piu robusta: circa `120-200 USD` al mese
+| Componente | Descrizione |
+|------|-----------|
+| *Secrets Manager* | verrebbe utilizzato per conservare secret key, credenziali database e API key fuori dal codice |
+| *IAM Roles e IAM Policies* | permetterebbero di assegnare a ogni componente solo i permessi minimi necessari |
+| *Security Groups* | limiterebbero gli accessi tra i componenti |
+| *VPC Endpoints* | consentirebbero di raggiungere alcuni servizi AWS in modo privato, senza passare da internet |
+
+### Servizi di supporto
+
+Per completare l'architettura, sarebbero presenti anche alcuni servizi di supporto:
+
+| Servizio | Descrizione |
+|------|-----------|
+| *ECR* | per il pull delle immagini dei container |
+| *CloudWatch* | per log e metriche |
+| *S3* | per asset statici e possibili estensioni future di storage |
+| *Google Gemini API* | come servizio esterno per l'analisi AI delle recensioni |
+
+### Connettività in uscita
+
+Poiché i task ECS Fargate si troverebbero in subnet private, la connettività verso servizi esterni verrebbe gestita tramite:
+
+| Componente | Descrizione |
+|------|-----------|
+| *NAT Gateway per Availability Zone* | così da mantenere l'accesso in uscita anche in caso di fault su una singola AZ |
+
+Questa connettività sarebbe utile, ad esempio, per:
+
+| Utilizzo | Descrizione |
+|------|-----------|
+| *Google Gemini API* | chiamare il servizio esterno di analisi AI |
+| *Servizi esterni non esposti tramite VPC Endpoint* | raggiungere risorse esterne quando necessario |
+
+### Scalabilità e disponibilità
+
+L'architettura è progettata per poter crescere insieme al carico applicativo.
+
+| Componente | Descrizione |
+|------|-----------|
+| *ECS Service Auto Scaling* | permetterebbe di aumentare o ridurre i task in esecuzione in base al carico |
+| *2 Availability Zone* | migliorerebbero la resilienza dell'applicazione |
+| *RDS Multi-AZ* | garantirebbe maggiore continuità operativa in caso di fault del nodo primario |
+
+### Nota finale
+
+Questa architettura non descrive l'infrastruttura attualmente deployata, ma una *proposta di evoluzione cloud* del progetto, pensata per rendere il sistema più realistico in termini di sicurezza, disponibilità e scalabilità.
 
 ## Project Management
 
